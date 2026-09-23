@@ -1,0 +1,15 @@
+.env
+*.key
+*.pem
+*.token
+*.secret
+cookies.txt
+*.gguf
+*.apk
+*.mp4
+*.mkv
+*.webm
+*.mov
+node_modules/
+__pycache__/
+.cache/
