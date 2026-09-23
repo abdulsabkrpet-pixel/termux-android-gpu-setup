@@ -1,65 +1,173 @@
 # Termux Android GPU Setup
 
-A practical record of running Linux multimedia and GPU-accelerated applications on Android using Termux.
+A practical documentation project for running Linux multimedia applications on Android using Termux, Termux:X11, Mesa, Zink, Turnip and Vulkan.
+
+This repository records a working configuration tested on an Android device with a Qualcomm Adreno 650 GPU.
+
+## Architecture
+
+The graphics path tested in this project is:
+
+1. Android
+2. Termux
+3. Termux:X11
+4. Mesa
+5. Zink
+6. Vulkan
+7. Mesa Turnip
+8. Qualcomm Adreno 650 GPU
+9. mpv
+
+For OpenGL applications, Zink provides an OpenGL implementation on top of Vulkan. mpv can use Vulkan directly for video rendering.
 
 ## Tested Environment
 
-- Android
+| Component | Tested configuration |
+|---|---|
+| Platform | Android |
+| Terminal | Termux |
+| Display | Termux:X11 |
+| Graphics | Mesa |
+| OpenGL implementation | Zink |
+| Vulkan driver | Mesa Turnip |
+| GPU | Qualcomm Adreno 650 |
+| Vulkan | 1.3 |
+| Media player | mpv |
+
+## GPU Verification
+
+Run:
+
+
+
+The tested configuration reported a renderer similar to:
+
+
+
+This indicates that OpenGL is being provided through Zink using Vulkan and the Mesa Turnip driver.
+
+## Check X11 Display
+
+Run:
+
+
+
+In the tested setup the X11 socket was , so the display was:
+
+
+
+The display number can be different on other installations.
+
+## mpv Vulkan Playback
+
+The tested hardware-accelerated command is:
+
+
+
+mpv detected the hardware GPU:
+
+
+
+A software  device may also appear. The Turnip device is the hardware GPU path.
+
+## Smart mpvx Launcher
+
+This repository includes .
+
+The script searches common Android storage locations and launches mpv using Vulkan GPU acceleration.
+
+Example:
+
+
+
+Install it into the Termux PATH:
+
+
+
+Then use:
+
+
+
+## Android Storage
+
+After running:
+
+
+
+Android shared storage is normally available through:
+
+
+
+For example, Android  is normally accessible as:
+
+
+
+## Graphics Pipeline
+
+OpenGL applications using Zink follow this general path:
+
+
+
+mpv Vulkan playback follows:
+
+
+
+## Troubleshooting
+
+### mpv uses llvmpipe
+
+Check OpenGL:
+
+
+
+Check Vulkan:
+
+
+
+Make sure the Turnip GPU is detected.
+
+### Check X11
+
+
+
+If the socket is :
+
+
+
+### Test mpv directly
+
+
+
+### Legacy X11 fallback
+
+
+
+This uses mpv's legacy X11 video output rather than the Vulkan GPU path.
+
+## Important Notes
+
+This repository documents one tested Android/Termux configuration.
+
+Hardware, Android versions, Termux:X11 versions, Mesa versions and GPU drivers can behave differently on other devices.
+
+The X11 display number is not guaranteed to be .
+
+Do not upload API keys, passwords, private keys, authentication tokens, personal videos, large model files or private documents.
+
+## Project Status
+
+Tested:
+
 - Termux
 - Termux:X11
 - Mesa
 - Zink
-- Mesa Turnip
+- Turnip
 - Vulkan 1.3
 - Adreno 650
-- mpv
+- mpv Vulkan playback
+- Smart Usage: mpvx <filename> launcher
 
-## GPU Verification
+## License
 
-```bash
-glxinfo -B
-zink Vulkan 1.3
-Turnip Adreno (TM) 650 (MESA_TURNIP)
-
-export DISPLAY=:1
-mpv --vo=gpu --gpu-api=vulkan "video.mp4"
-ls -l $TMPDIR/.X11-unix/
-X1
-export DISPLAY=:1
-
-### 2. Create the `mpvx` script
-
-```bash
-cat > mpvx.sh <<'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-
-export DISPLAY=:1
-
-if [ $# -eq 0 ]; then
-    echo "Usage: mpvx <filename>"
-    exit 1
-fi
-
-q="$*"
-
-for dir in \
-    "$HOME/storage/shared/Video" \
-    "$HOME/storage/movies" \
-    "$HOME/storage/downloads" \
-    "$HOME/storage/dcim" \
-    "$HOME/storage/shared/Movies" \
-    "$HOME/storage/shared/Download"
-do
-    [ -d "$dir" ] || continue
-
-    file=$(find "$dir" -type f -iname "*$q*" 2>/dev/null | head -n 1)
-
-    if [ -n "$file" ]; then
-        echo "▶ Found: $file"
-        mpv --vo=gpu --gpu-api=vulkan "$file"
-        exit $?
-    fi
-done
-
-echo "❌ Video not found: $q"
-exit 1
+MIT License
